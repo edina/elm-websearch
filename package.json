@@ -1,0 +1,59 @@
+{
+  "name": "opencode-elm-websearch",
+  "version": "0.1.0",
+  "description": "An OpenCode plugin that searches the public web through the University of Edinburgh ELM API.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "bin": {
+    "opencode-elm-websearch": "./dist/install-skill.js"
+  },
+  "files": [
+    "dist",
+    "skills",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "check": "tsc -p tsconfig.json --noEmit",
+    "test": "npm run build && node --test test/*.test.mjs",
+    "prepack": "npm test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/edina/opencode-elm-websearch.git"
+  },
+  "bugs": {
+    "url": "https://github.com/edina/opencode-elm-websearch/issues"
+  },
+  "homepage": "https://github.com/edina/opencode-elm-websearch#readme",
+  "keywords": [
+    "opencode",
+    "opencode-plugin",
+    "elm",
+    "web-search",
+    "university-of-edinburgh"
+  ],
+  "author": "EDINA, University of Edinburgh",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@opencode-ai/plugin": "^1.18.16"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.9.0"
+  }
+}
