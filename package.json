@@ -12,7 +12,7 @@
     }
   },
   "bin": {
-    "opencode-elm-websearch": "./dist/install-skill.js"
+    "opencode-elm-websearch": "dist/install-skill.js"
   },
   "files": [
     "dist",
