@@ -1,6 +1,19 @@
-import { tool, type Plugin } from '@opencode-ai/plugin';
+import { readFile } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
+
+import { Plugin, Skill } from '@opencode-ai/plugin';
 
 const DEFAULT_ELM_API_BASE_URL = 'https://elm.edina.ac.uk/api/v1';
+
+type ElmWebsearchArgs = {
+  query: string;
+  depth?: 'fast' | 'standard' | 'deep';
+  max_results?: number;
+  include_domains?: string[];
+  exclude_domains?: string[];
+  from_date?: string;
+  to_date?: string;
+};
 
 function requireApiKey(): string {
   const value = process.env.ELM_API_KEY?.trim();
@@ -16,46 +29,61 @@ function validateDateRange(fromDate?: string, toDate?: string): void {
   }
 }
 
-const elmWebsearch = tool({
+const elmWebsearch = {
+  name: 'elm-websearch',
   description:
     'Search the public web through the University of Edinburgh ELM API. Use for recent facts, news, changing documentation, verification, recommendations, or answers requiring source links. Returns ranked source names, URLs, and content.',
-  args: {
-    query: tool.schema.string().min(1).describe('A focused natural-language web search query'),
-    depth: tool.schema
-      .enum(['fast', 'standard', 'deep'])
-      .optional()
-      .describe(
-        'Search depth; defaults to standard. Use fast for short keyword-style lookups and deep only for complex multi-step research.',
-      ),
-    max_results: tool.schema
-      .number()
-      .int()
-      .min(1)
-      .max(100)
-      .optional()
-      .describe('Maximum number of sources to return; defaults to 10'),
-    include_domains: tool.schema
-      .array(tool.schema.string().min(1))
-      .max(100)
-      .optional()
-      .describe('Only return results from these domains'),
-    exclude_domains: tool.schema
-      .array(tool.schema.string().min(1))
-      .max(100)
-      .optional()
-      .describe('Exclude results from these domains'),
-    from_date: tool.schema
-      .string()
-      .regex(/^\d{4}-\d{2}-\d{2}$/)
-      .optional()
-      .describe('Only return results on or after this YYYY-MM-DD date'),
-    to_date: tool.schema
-      .string()
-      .regex(/^\d{4}-\d{2}-\d{2}$/)
-      .optional()
-      .describe('Only return results on or before this YYYY-MM-DD date'),
+  input: {
+    type: 'object' as const,
+    properties: {
+      query: {
+        type: 'string',
+        minLength: 1,
+        description: 'A focused natural-language web search query',
+      },
+      depth: {
+        type: 'string',
+        enum: ['fast', 'standard', 'deep'],
+        description:
+          'Search depth; defaults to standard. Use fast for short keyword-style lookups and deep only for complex multi-step research.',
+      },
+      max_results: {
+        type: 'integer',
+        minimum: 1,
+        maximum: 100,
+        description: 'Maximum number of sources to return; defaults to 10',
+      },
+      include_domains: {
+        type: 'array',
+        maxItems: 100,
+        items: { type: 'string', minLength: 1 },
+        description: 'Only return results from these domains',
+      },
+      exclude_domains: {
+        type: 'array',
+        maxItems: 100,
+        items: { type: 'string', minLength: 1 },
+        description: 'Exclude results from these domains',
+      },
+      from_date: {
+        type: 'string',
+        pattern: '^\\d{4}-\\d{2}-\\d{2}$',
+        description: 'Only return results on or after this YYYY-MM-DD date',
+      },
+      to_date: {
+        type: 'string',
+        pattern: '^\\d{4}-\\d{2}-\\d{2}$',
+        description: 'Only return results on or before this YYYY-MM-DD date',
+      },
+    },
+    required: ['query'],
+    additionalProperties: false,
   },
-  async execute(args, context) {
+  async execute(
+    input: unknown,
+    context: { progress(update: Record<string, unknown>): Promise<void> },
+  ) {
+    const args = input as ElmWebsearchArgs;
     validateDateRange(args.from_date, args.to_date);
 
     const baseURL = (process.env.ELM_API_BASE_URL?.trim() || DEFAULT_ELM_API_BASE_URL).replace(/\/+$/, '');
@@ -71,12 +99,11 @@ const elmWebsearch = tool({
       ...(args.to_date ? { toDate: args.to_date } : {}),
     };
 
-    context.metadata({
+    await context.progress({
       title: `Web search: ${args.query}`,
-      metadata: { depth: requestBody.depth },
+      depth: requestBody.depth,
     });
 
-    const signal = AbortSignal.any([context.abort, AbortSignal.timeout(180_000)]);
     const response = await fetch(`${baseURL}/search`, {
       method: 'POST',
       headers: {
@@ -84,7 +111,7 @@ const elmWebsearch = tool({
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(requestBody),
-      signal,
+      signal: AbortSignal.timeout(180_000),
     });
     const responseText = await response.text();
 
@@ -94,19 +121,39 @@ const elmWebsearch = tool({
 
     try {
       const result: unknown = JSON.parse(responseText);
-      return {
-        title: `Web search: ${args.query}`,
-        output: JSON.stringify(result, null, 2),
-        metadata: { depth: requestBody.depth },
-      };
+      return { content: JSON.stringify(result, null, 2), metadata: { depth: requestBody.depth } };
     } catch {
-      return responseText;
+      return { content: responseText, metadata: { depth: requestBody.depth } };
     }
+  },
+};
+
+const skillPath = fileURLToPath(new URL('../skills/elm-websearch/SKILL.md', import.meta.url));
+
+export const ElmWebsearchPlugin = Plugin.define({
+  id: 'elm-websearch',
+  async setup(context) {
+    const skillMarkdown = await readFile(skillPath, 'utf8');
+    const skillContent = skillMarkdown.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n/, '');
+
+    await context.skill.transform((draft) => {
+      draft.add(
+        Skill.Info.make({
+          id: Skill.ID.make('elm-websearch'),
+          name: Skill.Name.make('elm-websearch'),
+          description:
+            'Search the public web with the ELM web-search tool for current, unfamiliar, or citation-backed information.',
+          autoinvoke: true,
+          location: skillPath as Skill.Info['location'],
+          content: skillContent,
+        }),
+      );
+    });
+
+    await context.tool.transform((draft) => {
+      draft.add(elmWebsearch);
+    });
   },
 });
 
-export const ElmWebsearchPlugin: Plugin = async () => ({
-  tool: {
-    'elm-websearch': elmWebsearch,
-  },
-});
+export default ElmWebsearchPlugin;

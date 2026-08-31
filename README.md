@@ -6,7 +6,7 @@ The tool supports fast, standard, and deep search, domain and date filters, and 
 
 ## Requirements
 
-- OpenCode with npm plugin support
+- OpenCode V2 with npm plugin support
 - An ELM API key with access to web search
 
 ## Install
@@ -16,11 +16,13 @@ Add the plugin to your global `~/.config/opencode/opencode.jsonc` or a project `
 ```jsonc
 {
   "$schema": "https://opencode.ai/config.json",
-  "plugin": ["opencode-elm-websearch"]
+  "plugins": ["opencode-elm-websearch"]
 }
 ```
 
 OpenCode installs npm plugins automatically when it starts.
+
+The plugin registers its bundled `elm-websearch` skill automatically. The skill is active only while the plugin is enabled; no separate skill installation is required.
 
 Set the API key in the environment used to launch OpenCode:
 
@@ -30,18 +32,6 @@ opencode
 ```
 
 Do not commit the key to a repository. The base URL defaults to `https://elm.edina.ac.uk/api/v1`. For development or another ELM deployment, set `ELM_API_BASE_URL` before starting OpenCode.
-
-## Optional skill
-
-The plugin's tool description is sufficient for OpenCode to discover and call it. The bundled skill adds more detailed guidance about choosing search depth and citing results.
-
-Install the skill globally with:
-
-```sh
-npx opencode-elm-websearch
-```
-
-This writes `~/.config/opencode/skills/elm-websearch/SKILL.md`. It refuses to overwrite an existing skill unless you pass `--force`.
 
 ## Tool arguments
 
@@ -64,7 +54,7 @@ npm install
 npm test
 ```
 
-To test the unpublished plugin from a checkout, add its absolute directory to the `plugin` array in `opencode.jsonc`, then restart OpenCode.
+To test the unpublished plugin from a checkout, add its absolute directory to the `plugins` array in `opencode.jsonc`, then restart OpenCode.
 
 ## Publishing
 

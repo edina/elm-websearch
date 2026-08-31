@@ -11,9 +11,6 @@
       "import": "./dist/index.js"
     }
   },
-  "bin": {
-    "opencode-elm-websearch": "dist/install-skill.js"
-  },
   "files": [
     "dist",
     "skills",
@@ -50,7 +47,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@opencode-ai/plugin": "^1.18.16"
+    "@opencode-ai/plugin": "0.0.0-beta-18721"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
