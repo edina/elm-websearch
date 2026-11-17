@@ -12,7 +12,20 @@ The tool supports fast, standard, and deep search, domain and date filters, and 
 
 ## Install
 
-Add the plugin to your global `~/.config/opencode/opencode.jsonc` or a project `opencode.jsonc`:
+### Using the CLI
+
+Install both plugins and add them to your global OpenCode configuration:
+
+```sh
+opencode plugin add opencode-elm-models
+opencode plugin add opencode-elm-websearch
+```
+
+If the models plugin is already installed, run only the second command. Restart OpenCode after installation, then follow the [API key](#api-key) instructions below.
+
+### Using the configuration file
+
+Alternatively, add the plugins to your global `~/.config/opencode/opencode.jsonc` or a project `opencode.jsonc`:
 
 ```jsonc
 {
