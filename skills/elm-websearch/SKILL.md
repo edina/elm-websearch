@@ -11,7 +11,7 @@ metadata:
 
 Use the `elm-websearch` tool when answering requires current public-web information or verifiable sources.
 
-`ELM_API_KEY` must be present in the environment that started OpenCode. The API base URL defaults to `https://elm.edina.ac.uk/api/v1`; `ELM_API_BASE_URL` can override it for development or alternative deployments. Restart OpenCode after changing either value.
+Search reuses the active `elm` credential from the `opencode-elm-models` plugin. Connect **University of Edinburgh ELM** through `/connect` or `opencode auth login elm` if needed. `ELM_API_KEY` in the OpenCode server's environment is a fallback. The API base URL defaults to `https://elm.edina.ac.uk/api/v1`; `ELM_API_BASE_URL` can override it for development or alternative deployments. Restart the OpenCode server after changing environment variables.
 
 ## Search
 

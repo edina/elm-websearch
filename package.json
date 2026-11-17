@@ -41,16 +41,17 @@
   "author": "EDINA, University of Edinburgh",
   "license": "MIT",
   "engines": {
-    "node": ">=20"
+    "node": ">=22.19.0"
   },
   "publishConfig": {
     "access": "public"
   },
   "dependencies": {
-    "@opencode-ai/plugin": "0.0.0-beta-18721"
+    "@opencode/plugin": "^2.3.0"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
+    "effect": "^4.1.0",
     "typescript": "^5.9.0"
   }
 }
